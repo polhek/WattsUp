@@ -18,7 +18,7 @@ const deviceManager = new DeviceManager();
 document.querySelector<HTMLButtonElement>("#connectButton")!.onclick =
   async () => {
     try {
-      const device = await deviceManager.connect("hearthRate");
+      const device = await deviceManager.connect("heartRate");
       console.log("Connected to device:", device);
     } catch (error) {
       console.error("Error connecting to device:", error);

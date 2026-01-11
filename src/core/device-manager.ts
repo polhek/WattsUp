@@ -1,4 +1,5 @@
-import type { DeviceCategory } from "./device-registry.ts";
+import { DeviceState } from "./device-state.ts";
+import type { DeviceCategory, DeviceTypeMap } from "./device-registry.ts";
 import { DEVICE_MAP } from "./device-registry.ts";
 import type { BaseDevice } from "./devices/base-device";
 
@@ -13,14 +14,42 @@ export class DeviceManager extends EventTarget {
     });
 
     const instance = new config.class(webDevice);
-
-    await instance.init();
     this.devices.set(category, instance);
+
+    try {
+      instance.status = DeviceState.Connecting;
+      instance.dispatchEvent(new CustomEvent("statuschange", { detail: instance.status }));
+
+      await instance.init();
+
+      instance.status = DeviceState.Connected;
+      instance.dispatchEvent(new CustomEvent("statuschange", { detail: instance.status }));
+    } catch (e) {
+      instance.status = DeviceState.Disconnected;
+      instance.dispatchEvent(new CustomEvent("statuschange", { detail: instance.status }));
+      this.devices.delete(category);
+      throw e;
+    }
 
     return instance;
   }
 
-  get<T extends BaseDevice>(category: DeviceCategory): T {
-    return this.devices.get(category) as T;
+  get<K extends DeviceCategory>(category: K): DeviceTypeMap[K] | undefined {
+    return this.devices.get(category) as DeviceTypeMap[K] | undefined;
+  }
+
+  disconnect(category: DeviceCategory) {
+    const device = this.devices.get(category);
+    if (device) {
+      device.disconnect();
+      this.devices.delete(category);
+    }
+  }
+
+  disconnectAll() {
+    for (const device of this.devices.values()) {
+      device.disconnect();
+    }
+    this.devices.clear();
   }
 }
