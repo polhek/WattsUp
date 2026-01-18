@@ -1,12 +1,12 @@
-import { DeviceState } from "./device-state.ts";
-import type { DeviceCategory, DeviceTypeMap } from "./device-registry.ts";
-import { DEVICE_MAP } from "./device-registry.ts";
-import type { BaseDevice } from "./devices/base-device";
+import { DeviceState } from './device-state.ts';
+import type { DeviceCategory, DeviceTypeMap } from './device-registry.ts';
+import { DEVICE_MAP } from './device-registry.ts';
+import type { BaseDevice } from './devices/base-device';
 
 export class DeviceManager extends EventTarget {
   protected devices = new Map<DeviceCategory, BaseDevice>();
 
-  async connect(category: DeviceCategory) {
+  async connect<K extends DeviceCategory>(category: K): Promise<DeviceTypeMap[K]> {
     const config = DEVICE_MAP[category];
 
     const webDevice = await navigator.bluetooth.requestDevice({
@@ -18,20 +18,20 @@ export class DeviceManager extends EventTarget {
 
     try {
       instance.status = DeviceState.Connecting;
-      instance.dispatchEvent(new CustomEvent("statuschange", { detail: instance.status }));
+      instance.dispatchEvent(new CustomEvent('statuschange', { detail: instance.status }));
 
       await instance.init();
 
       instance.status = DeviceState.Connected;
-      instance.dispatchEvent(new CustomEvent("statuschange", { detail: instance.status }));
+      instance.dispatchEvent(new CustomEvent('statuschange', { detail: instance.status }));
     } catch (e) {
       instance.status = DeviceState.Disconnected;
-      instance.dispatchEvent(new CustomEvent("statuschange", { detail: instance.status }));
+      instance.dispatchEvent(new CustomEvent('statuschange', { detail: instance.status }));
       this.devices.delete(category);
       throw e;
     }
 
-    return instance;
+    return instance as DeviceTypeMap[K];
   }
 
   get<K extends DeviceCategory>(category: K): DeviceTypeMap[K] | undefined {
@@ -51,5 +51,11 @@ export class DeviceManager extends EventTarget {
       device.disconnect();
     }
     this.devices.clear();
+  }
+
+  private identifyDevice(device: BluetoothDevice): DeviceCategory | null {
+    if (device.name?.toLowerCase().includes('heart')) return 'heartRate';
+    if (device.name?.toLowerCase().includes('trainer')) return 'smartTrainer';
+    return null;
   }
 }
