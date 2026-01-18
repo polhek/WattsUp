@@ -1,4 +1,4 @@
-import { FTMSParser } from '../parsers/ftms-parser';
+import { FTMSParser } from './parsers/ftms-parser';
 import { BaseDevice } from './base-device';
 
 export class SmartTrainer extends BaseDevice {
@@ -50,6 +50,7 @@ export class SmartTrainer extends BaseDevice {
     }
     const dataView = target.value;
     const stats = FTMSParser.parse(dataView);
+    // TODO: Dispatch only the data that is being listened to based on dataToListenTo
   }
 
   async setPowerDataListening(shouldListen: boolean) {

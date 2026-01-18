@@ -52,10 +52,4 @@ export class DeviceManager extends EventTarget {
     }
     this.devices.clear();
   }
-
-  private identifyDevice(device: BluetoothDevice): DeviceCategory | null {
-    if (device.name?.toLowerCase().includes('heart')) return 'heartRate';
-    if (device.name?.toLowerCase().includes('trainer')) return 'smartTrainer';
-    return null;
-  }
 }

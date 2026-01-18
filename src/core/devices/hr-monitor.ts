@@ -1,4 +1,4 @@
-import { HRParser } from '../parsers/hr-parser';
+import { HRParser } from './parsers/hr-parser';
 import { BaseDevice } from './base-device';
 
 export class HeartRateMonitor extends BaseDevice {

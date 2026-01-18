@@ -2,7 +2,9 @@ export interface BikeData {
   speed?: number; // in km/h
   cadence?: number; // in RPM
   power?: number; // in Watts
+  targetPower?: number; // in Watts
   heartRate?: number; // in BPM
+  resistanceLevel?: number; // unitless
 }
 
 export class FTMSParser {
@@ -16,7 +18,6 @@ export class FTMSParser {
     let offset = 2; // Start after the Flags
 
     // Bit 0: More Data (0 = Speed is present)
-    // Note: In FTMS, if Bit 0 is 0, Speed is present.
     if (!(flags & 0x01)) {
       if (data.byteLength >= offset + 2) {
         stats.speed = data.getUint16(offset, true) / 100;
@@ -42,7 +43,12 @@ export class FTMSParser {
     if (flags & 0x10) offset += 3;
 
     // Bit 5: Resistance Level
-    if (flags & 0x20) offset += 2;
+    if (flags & 0x20) {
+      if (data.byteLength >= offset + 2) {
+        stats.resistanceLevel = data.getInt16(offset, true);
+        offset += 2;
+      }
+    }
 
     // Bit 6: Instantaneous Power
     if (flags & 0x40) {
@@ -52,6 +58,12 @@ export class FTMSParser {
       }
     }
 
+    // Bit 7: Average Power (Optional jump)
+    if (flags & 0x80) offset += 2;
+
+    // Bit 8: Expended Energy (Optional jump - 5 bytes total: uint16, uint16, uint8)
+    if (flags & 0x100) offset += 5;
+
     // Bit 9: Heart Rate
     if (flags & 0x200) {
       if (data.byteLength >= offset + 1) {
@@ -59,7 +71,14 @@ export class FTMSParser {
         offset += 1;
       }
     }
-    console.log(stats);
+
+    // Bit 14: Target Power
+    if (flags & 0x4000) {
+      if (data.byteLength >= offset + 2) {
+        stats.targetPower = data.getInt16(offset, true);
+        offset += 2;
+      }
+    }
 
     return stats;
   }
