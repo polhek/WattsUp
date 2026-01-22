@@ -6,6 +6,7 @@ import typescriptLogo from './typescript.svg';
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
   <button id="connectButton">Connect to Device</button>
+  <button id="setResistanceButton">Set Resistance to 150W</button>
     <h1>WattsUp!</h1>
     <div class="logos">
       <a href="https://www.typescriptlang.org/" target="_blank">
@@ -16,6 +17,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 `;
 
 const deviceManager = new DeviceManager();
+
 const workoutManager = new WorkoutManager(deviceManager);
 
 document.querySelector<HTMLButtonElement>('#connectButton')!.onclick = async () => {};
