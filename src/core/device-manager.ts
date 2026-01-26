@@ -52,4 +52,8 @@ export class DeviceManager extends EventTarget {
     }
     this.devices.clear();
   }
+
+  getLatestData(): Partial<Record<DeviceCategory, unknown>> {
+    throw new Error('TODO');
+  }
 }

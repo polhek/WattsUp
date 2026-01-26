@@ -36,7 +36,7 @@ export interface ActivitySummary {
   avgHeartRate: number | undefined;
   totalDistance: number | undefined; // Meters
   totalDuration: number | undefined; // Seconds (moving time)
-  calories: number | undefined;
+  kiloJoules: number | undefined;
   avgCadence: number | undefined;
   maxCadence: number | undefined;
   normalizedPower: number | undefined;

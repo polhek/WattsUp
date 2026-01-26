@@ -47,6 +47,16 @@ export class Activity {
     });
   }
 
+  lap() {
+    const now = Date.now();
+    this.events.push({
+      type: 'lap',
+      value: 'marker',
+      timestamp: now,
+      label: `Lap at ${(now - this.startTime - this.totalPausedTime) / 1000}s`,
+    });
+  }
+
   resume() {
     if (!this.isPaused) {
       return;
@@ -85,10 +95,8 @@ export class Activity {
     const avgHeartRate =
       this.snapshots.reduce((sum, snap) => sum + (snap.heartRate || 0), 0) / this.snapshots.length;
     const maxPower = Math.max(...this.snapshots.map((snap) => snap.power || 0));
-
-    // TODO: Calculate calories and normalized power
-    const normalizedPower = 0;
-
+    const normalizedPower = this.calculateNormalizedPower(this.snapshots.map((s) => s.power || 0));
+    const kJ = this.calculateKj(avgPower, totalDuration);
     return {
       totalDuration,
       avgCadence: isNaN(avgCadence) ? undefined : avgCadence,
@@ -97,8 +105,36 @@ export class Activity {
       maxPower: isNaN(maxPower) ? undefined : maxPower,
       avgPower: isNaN(avgPower) ? 0 : avgPower,
       totalDistance: isNaN(totalDistance) ? undefined : totalDistance,
-      calories: undefined,
-      normalizedPower: undefined,
+      kiloJoules: isNaN(kJ) ? undefined : kJ,
+      normalizedPower:
+        normalizedPower === null || isNaN(normalizedPower) ? undefined : normalizedPower,
     };
+  }
+
+  private calculateKj(avgPower: number, length: number): number {
+    return (avgPower * length) / 1000;
+  }
+
+  private calculateNormalizedPower(powerData: number[]) {
+    const windowSize = 30;
+
+    if (powerData?.length < windowSize) {
+      return null;
+    }
+
+    const rollingAverages: number[] = [];
+    for (let i = 0; i <= powerData.length - windowSize; i++) {
+      const window = powerData.slice(i, i + windowSize);
+      const avg =
+        window.reduce((sum, val) => sum + (val || 0), 0) /
+        window.filter((val) => val !== undefined).length;
+      rollingAverages.push(avg);
+    }
+
+    const fourthPowerAverages = rollingAverages.map((avg) => Math.pow(avg, 4));
+    const meanFourthPower =
+      fourthPowerAverages.reduce((sum, val) => sum + val, 0) / fourthPowerAverages.length;
+
+    return Math.pow(meanFourthPower, 1 / 4);
   }
 }

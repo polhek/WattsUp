@@ -1,6 +1,9 @@
 export class WorkoutParser {
   static parse(data: ArrayBuffer) {
-    // TODO: Implement workout parsing logic
+    throw new Error('Not implemented');
+  }
+
+  private static parseZwoFile(data: ArrayBuffer) {
     throw new Error('Not implemented');
   }
 }
